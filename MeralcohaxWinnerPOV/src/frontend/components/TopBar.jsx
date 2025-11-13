@@ -17,18 +17,19 @@ function TopBar({ onRefresh, stats }) {
       </div>
 
       <div className="topbar-right">
-        <div className="search-box">
+        {/* removed search temporarily */}
+        {/* <div className="search-box">
           <span className="search-icon">🔍</span>
           <input type="text" placeholder="Search customers..." />
-        </div>
+        </div> */}
 
         <button className="icon-btn" title="Notifications">
           <span className="notification-badge">3</span>
-          🔔
+          <i class="fi fi-br-bell"></i>
         </button>
 
         <button className="icon-btn" onClick={onRefresh} title="Refresh">
-          🔄
+          <i class="fi fi-br-refresh"></i>
         </button>
       </div>
     </div>

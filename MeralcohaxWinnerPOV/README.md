@@ -265,7 +265,7 @@ Models (Weighted Voting):
 
 ## 🤝 Contributing
 
-This project was developed for **Meralcohax 2025** by Team KILOS.
+This project was developed for **Meralcohax 2025** by Team Elektrifie.
 
 ---
 

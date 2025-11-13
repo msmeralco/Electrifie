@@ -2,18 +2,16 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import './Sidebar.css';
 
+
 function Sidebar({ activeView, setActiveView }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard', icon: '📊', label: 'Dashboard' },
-    { id: 'map', icon: '🗺️', label: 'Map View' },
-    { id: 'analytics', icon: '📈', label: 'Analytics' },
-    { id: 'inspections', icon: '🔍', label: 'Inspections' },
-    { id: 'reports', icon: '📄', label: 'Reports' },
-    { id: 'customers', icon: '👥', label: 'Customers' },
-    { id: 'alerts', icon: '🔔', label: 'Alerts' },
-    { id: 'settings', icon: '⚙️', label: 'Settings' },
+    { id: 'dashboard', icon: <i class="fi fi-br-stats"></i>, label: 'Dashboard' },
+    { id: 'map', icon: <i class="fi fi-br-region-pin-alt"></i>, label: 'Map View' },
+    { id: 'fieldops', icon: <i class="fi fi-br-wrench-alt"></i>, label: 'Field Ops View' },
+    { id: 'engineering', icon: <i class="fi fi-br-hard-hat"></i>, label: 'Engineering View' },
+    { id: 'customers', icon: <i class="fi fi-br-users"></i>, label: 'Customer Service View' },
   ];
 
   return (
@@ -32,15 +30,20 @@ function Sidebar({ activeView, setActiveView }) {
 
       <nav className="sidebar-nav">
         {menuItems.map((item) => (
-          <button
-            key={item.id}
-            className={`nav-item ${activeView === item.id ? 'active' : ''}`}
-            onClick={() => setActiveView(item.id)}
-            title={isCollapsed ? item.label : ''}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            {!isCollapsed && <span className="nav-label">{item.label}</span>}
-          </button>
+          <>
+            <button
+              key={item.id}
+              className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+              onClick={() => setActiveView(item.id)}
+              title={isCollapsed ? item.label : ''}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {!isCollapsed && <span className="nav-label">{item.label}</span>}
+            </button>
+            {item.id === 'map' && !isCollapsed && (
+              <div className="sidebar-divider" />
+            )}
+          </>
         ))}
       </nav>
 

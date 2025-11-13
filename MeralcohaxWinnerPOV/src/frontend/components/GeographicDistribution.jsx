@@ -1,19 +1,19 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import './GeographicDistribution.css';
 
 function GeographicDistribution({ hotlist }) {
-  // Calculate geographic distribution from hotlist
+  const [currentPage, setCurrentPage] = useState(1);
+  const regionsPerPage =3; // Show 4 rows per page
+
   const calculateDistribution = () => {
     const regions = {};
-    
-    // Metro Manila regions with realistic NTL distribution
     const metroManilaRegions = [
       'Quezon City', 'Manila', 'Caloocan', 'Pasig', 'Taguig',
       'Makati', 'Mandaluyong', 'Marikina', 'Parañaque', 'Las Piñas',
       'Muntinlupa', 'Valenzuela', 'Malabon', 'Navotas', 'San Juan', 'Pasay'
     ];
-    
-    // Distribute hotlist across regions
+
     hotlist.forEach((item, index) => {
       const region = metroManilaRegions[index % metroManilaRegions.length];
       if (!regions[region]) {
@@ -28,26 +28,63 @@ function GeographicDistribution({ hotlist }) {
       regions[region].estimatedLoss += item.estimated_monthly_loss || 0;
       regions[region].avgConfidence += item.prediction_confidence || 0;
     });
-    
-    // Calculate averages and sort by cases
+
     return Object.values(regions)
       .map(region => ({
         ...region,
         avgConfidence: region.cases > 0 ? region.avgConfidence / region.cases : 0
       }))
-      .sort((a, b) => b.cases - a.cases)
-      .slice(0, 8); // Top 8 regions
+      .sort((a, b) => b.cases - a.cases);
   };
 
   const regions = calculateDistribution();
   const totalCases = regions.reduce((sum, r) => sum + r.cases, 0);
   const totalLoss = regions.reduce((sum, r) => sum + r.estimatedLoss, 0);
 
+  const totalPages = Math.ceil(regions.length / regionsPerPage);
+  const startIndex = (currentPage - 1) * regionsPerPage;
+  const displayedRegions = regions.slice(startIndex, startIndex + regionsPerPage);
+
   const getRiskLevel = (cases) => {
     if (cases >= 20) return { label: 'Critical', color: '#ef4444' };
     if (cases >= 10) return { label: 'High', color: '#f59e0b' };
     if (cases >= 5) return { label: 'Medium', color: '#eab308' };
     return { label: 'Low', color: '#10b981' };
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 3;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        pages.push(
+          <button
+            key={i}
+            className={`page-number ${i === currentPage ? 'active' : ''}`}
+            onClick={() => handlePageChange(i)}
+          >
+            {i}
+          </button>
+        );
+      } else if (
+        i === currentPage - 2 ||
+        i === currentPage + 2
+      ) {
+        pages.push(
+          <span key={`dots-${i}`} className="page-dots">...</span>
+        );
+      }
+    }
+    return pages;
   };
 
   return (
@@ -73,7 +110,7 @@ function GeographicDistribution({ hotlist }) {
       </div>
 
       <div className="regions-list">
-        {regions.map((region, index) => {
+        {displayedRegions.map((region, index) => {
           const risk = getRiskLevel(region.cases);
           const percentage = totalCases > 0 ? (region.cases / totalCases * 100) : 0;
           
@@ -81,7 +118,7 @@ function GeographicDistribution({ hotlist }) {
             <div key={index} className="region-item">
               <div className="region-header">
                 <div className="region-info">
-                  <span className="region-rank">#{index + 1}</span>
+                  <span className="region-rank">#{startIndex + index + 1}</span>
                   <span className="region-name">{region.name}</span>
                 </div>
                 <span className="region-badge" style={{ background: risk.color }}>
@@ -117,6 +154,27 @@ function GeographicDistribution({ hotlist }) {
             </div>
           );
         })}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="pagination-controls">
+        <button 
+          className={`page-btn ${currentPage === 1 ? 'disabled' : ''}`} 
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+
+        {renderPageNumbers()}
+
+        <button 
+          className={`page-btn ${currentPage === totalPages ? 'disabled' : ''}`} 
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

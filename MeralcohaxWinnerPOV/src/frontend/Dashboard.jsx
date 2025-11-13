@@ -11,6 +11,9 @@ import TheftCategoryChart from './components/TheftCategoryChart';
 import NTLMap from './components/NTLMap';
 import ImpactMetrics from './components/ImpactMetrics';
 import GeographicDistribution from './components/GeographicDistribution';
+import FieldOpsView from './components/FieldOpsView';
+import EngineeringView from './components/EngineeringView';
+import CustomerServiceView from './components/CustomerServiceView';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -133,14 +136,8 @@ function Dashboard() {
 
             <div className="dashboard-row">
               <div className="chart-card chart-1-2">
-                <GeographicDistribution hotlist={hotlist} />
-              </div>
-              <div className="chart-card chart-1-2">
-                <ImpactMetrics />
-              </div>
+              <GeographicDistribution hotlist={hotlist} />
             </div>
-
-            <div className="dashboard-row">
               <div className="chart-card chart-full">
                 <TopThefts hotlist={hotlist} />
               </div>
@@ -149,6 +146,12 @@ function Dashboard() {
             <div className="table-section">
               <InspectionTable hotlist={hotlist} />
             </div>
+
+            <div className="dashboard-row">
+            <div className="chart-card chart-1-2">
+              <ImpactMetrics />
+            </div>
+          </div>
           </>
         );
     }
@@ -202,6 +205,24 @@ function Dashboard() {
                   <NTLMap hotlist={hotlist} />
                 </div>
               )}
+              
+              {activeView === 'fieldops' && (
+                <div className="fieldops-view">
+                  <FieldOpsView hotlist={hotlist} stats={stats} />
+                </div>
+              )}
+
+              {activeView === 'engineering' && (
+              <div className="engineering-view">
+                 <EngineeringView hotlist={hotlist} stats={stats} />
+               </div>
+             )}
+
+             {activeView === 'customers' && (
+              <div className="customers-view">
+                 <CustomerServiceView hotlist={hotlist} stats={stats} />
+               </div>
+             )}
             </>
           )}
         </div>

@@ -53,15 +53,24 @@
 .chart-container {
   flex: 1;
   position: relative;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .chart-bars {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.75rem;
   height: 100%;
   padding-bottom: 2rem;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
 }
 
 .bar-wrapper {
@@ -71,6 +80,14 @@
   align-items: center;
   height: 100%;
 }
+
+/* .bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+} */
 
 .bar {
   width: 100%;
@@ -83,6 +100,9 @@
   align-items: flex-start;
   justify-content: center;
   padding-top: 0.5rem;
+  transition: height 0.7s ease, background 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+  animation: fadeInBar 0.5s ease forwards;
 }
 
 .bar:hover {
@@ -130,3 +150,18 @@
   height: 12px;
   border-radius: 50%;
 }
+
+.bar {
+  width: 100%;
+  border-radius: 8px;
+  transition: height 0.7s ease, background 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+  animation: fadeInBar 0.5s ease forwards;
+}
+
+@keyframes fadeInBar {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+

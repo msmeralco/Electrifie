@@ -72,8 +72,6 @@
 .region-item:hover {
   background: white;
   border-color: #fb7018;
-  box-shadow: 0 4px 12px rgba(251, 112, 24, 0.1);
-  transform: translateX(4px);
 }
 
 .region-header {
@@ -181,4 +179,46 @@
   .region-item {
     padding: 0.875rem;
   }
+}
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.page-btn,
+.page-number {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(.disabled),
+.page-number:hover {
+  border-color: #fb7018;
+  color: #fb7018;
+}
+
+.page-btn.disabled {
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  background: #f3f4f6;
+}
+
+.page-number.active {
+  background: #fb7018;
+  color: white;
+  border-color: #fb7018;
+}
+
+.page-dots {
+  color: #9ca3af;
+  font-weight: 600;
 }

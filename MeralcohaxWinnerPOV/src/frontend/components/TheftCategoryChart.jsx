@@ -3,10 +3,10 @@ import './TheftCategoryChart.css';
 
 function TheftCategoryChart() {
   const categories = [
-    { name: 'Consumption Anomaly', value: 42, color: '#fb7018', icon: '📉' },
-    { name: 'AMI Tamper Alert', value: 28, color: '#ef4444', icon: '⚠️' },
-    { name: 'Load Profile Mismatch', value: 18, color: '#f59e0b', icon: '📊' },
-    { name: 'Geospatial Clustering', value: 12, color: '#8b5cf6', icon: '🗺️' },
+    { name: 'Consumption Anomaly', value: 42, color: '#fb7018', icon: <i class="fi fi-br-chat-arrow-down"></i> },
+    { name: 'AMI Tamper Alert', value: 28, color: '#ef4444', icon: <i class="fi fi-br-triangle-warning"></i> },
+    { name: 'Load Profile Mismatch', value: 18, color: '#f59e0b', icon: <i class="fi fi-br-stats"></i> },
+    { name: 'Geospatial Clustering', value: 12, color: '#8b5cf6', icon: <i class="fi fi-br-region-pin-alt"></i> },
   ];
 
   const total = categories.reduce((sum, cat) => sum + cat.value, 0);
