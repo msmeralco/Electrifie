@@ -1,0 +1,107 @@
+.theft-category-chart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.category-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.category-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.category-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.category-percentage {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #111827;
+  min-width: 50px;
+  text-align: right;
+}
+
+.chart-footer {
+  display: flex;
+  gap: 2rem;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}

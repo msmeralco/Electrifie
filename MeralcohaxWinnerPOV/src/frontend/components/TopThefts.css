@@ -1,0 +1,146 @@
+.top-thefts {
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-thefts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.top-thefts-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.view-all {
+  font-size: 0.875rem;
+  color: #fb7018;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.view-all:hover {
+  color: #e65100;
+}
+
+.top-thefts-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.theft-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.theft-item:hover {
+  background: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  transform: translateX(4px);
+}
+
+.theft-rank {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #fb7018 0%, #ff9800 100%);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.theft-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.theft-customer {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.theft-location {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theft-metrics {
+  display: flex;
+  gap: 1.5rem;
+  flex-shrink: 0;
+}
+
+.theft-confidence,
+.theft-loss {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.confidence-label,
+.loss-label {
+  font-size: 0.625rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.confidence-value,
+.loss-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.loss-value {
+  color: #111827;
+}
+
+.top-thefts-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.assign-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #fb7018;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.assign-btn:hover {
+  background: #e65100;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(251, 112, 24, 0.3);
+}

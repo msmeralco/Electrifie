@@ -1,0 +1,214 @@
+.hotlist-container {
+  width: 100%;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #cbd5e1;
+}
+
+.btn-export {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-export:hover {
+  background: #2563eb;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.hotlist-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hotlist-table thead {
+  background: #1e293b;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.hotlist-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #cbd5e1;
+  border-bottom: 2px solid #334155;
+  white-space: nowrap;
+}
+
+.hotlist-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.hotlist-table th.sortable:hover {
+  color: #3b82f6;
+}
+
+.hotlist-table tbody tr {
+  border-bottom: 1px solid #1e293b;
+  transition: background 0.2s;
+}
+
+.hotlist-table tbody tr:hover {
+  background: #1e293b;
+}
+
+.hotlist-table tbody tr.selected {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.hotlist-table td {
+  padding: 1rem;
+  color: #e2e8f0;
+}
+
+.customer-id {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+.rank-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 35px;
+  text-align: center;
+}
+
+.confidence {
+  min-width: 150px;
+}
+
+.confidence-bar {
+  position: relative;
+  width: 100%;
+  height: 28px;
+  background: #1e293b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f97316, #fbbf24);
+  transition: width 0.3s;
+}
+
+.confidence-text {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #f1f5f9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.loss-amount {
+  font-weight: 700;
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.risk-badge.risk-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid #ef4444;
+}
+
+.risk-badge.risk-medium {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+  border: 1px solid #f97316;
+}
+
+.risk-badge.risk-low {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border: 1px solid #22c55e;
+}
+
+.indicators {
+  max-width: 400px;
+}
+
+.indicators ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.indicators li {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #cbd5e1;
+}
+
+.action {
+  max-width: 300px;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 1200px) {
+  .hotlist-table {
+    font-size: 0.875rem;
+  }
+  
+  .hotlist-table th,
+  .hotlist-table td {
+    padding: 0.75rem;
+  }
+}

@@ -1,0 +1,226 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-header {
+  padding: 2rem 1.5rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-header:hover {
+  background: rgba(251, 112, 24, 0.05);
+  border-bottom-color: rgba(251, 112, 24, 0.3);
+}
+
+.sidebar-header:active {
+  background: rgba(251, 112, 24, 0.1);
+}
+
+.collapsed .sidebar-header {
+  padding: 2rem 0.5rem 1.5rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  justify-content: center;
+}
+
+.collapsed .logo {
+  justify-content: center;
+}
+
+.logo-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 10px rgba(251, 112, 24, 0.5));
+  transition: all 0.3s ease;
+}
+
+.sidebar-header:hover .logo-icon {
+  filter: drop-shadow(0 0 15px rgba(251, 112, 24, 0.8));
+  transform: scale(1.05);
+}
+
+.collapsed .logo-icon {
+  font-size: 2.25rem;
+}
+
+.logo-text {
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fb7018 0%, #ff9800 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.logo-subtitle {
+  color: #ffcc80;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-header:hover .logo-subtitle {
+  color: #ffd699;
+}
+
+.sidebar-nav {
+  flex: 1 1 auto;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.collapsed .sidebar-nav {
+  padding: 1.5rem 0.5rem;
+}
+
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: #a5b4fc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 0.30rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-height: 28px;
+}
+
+.collapsed .nav-item {
+  padding: 0.875rem 0.5rem;
+  justify-content: center;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(251, 112, 24, 0.2) 0%, transparent 100%);
+  color: #ff9800;
+  border-left: 3px solid #fb7018;
+  padding-left: calc(1rem - 3px);
+}
+
+.collapsed .nav-item.active {
+  border-left: none;
+  border-bottom: 3px solid #fb7018;
+  padding-left: 0.5rem;
+  padding-bottom: calc(0.875rem - 3px);
+  background: rgba(251, 112, 24, 0.2);
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-label {
+  flex: 1;
+  text-align: left;
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fb7018 0%, #ff9800 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  color: #a5b4fc;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
