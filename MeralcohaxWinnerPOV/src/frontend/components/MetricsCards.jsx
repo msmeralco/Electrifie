@@ -2,22 +2,29 @@ import PropTypes from 'prop-types';
 import './MetricsCards.css';
 
 function MetricsCards({ stats }) {
-  if (!stats) {
+  if (!stats || !stats.customers || !stats.transformers || !stats.feeders) {
     return null;
   }
 
   const formatCurrency = (value) => {
+    if (!value || isNaN(value)) return '₱0.0M';
     return `₱${(value / 1000000).toFixed(1)}M`;
   };
 
   const formatNumber = (value) => {
+    if (!value || isNaN(value)) return '0';
     return new Intl.NumberFormat('en-PH').format(value);
+  };
+
+  const formatPercentage = (value) => {
+    if (!value || isNaN(value)) return '0.0%';
+    return `${parseFloat(value).toFixed(2)}%`;
   };
 
   const metrics = [
     {
       title: 'Total System Loss',
-      value: `${stats.model_accuracy}%`,
+      value: formatPercentage(stats.feeders.avg_system_loss),
       subtitle: 'Regulatory Cap: 6.25%',
       change: '+0.24%',
       trend: 'down',
@@ -27,7 +34,7 @@ function MetricsCards({ stats }) {
     },
     {
       title: 'NTL Cases Flagged',
-      value: formatNumber(stats.flagged_today),
+      value: formatNumber(stats.customers.critical_count + stats.customers.high_count),
       subtitle: 'High confidence today',
       change: '+12.5%',
       trend: 'up',
@@ -37,17 +44,17 @@ function MetricsCards({ stats }) {
     },
     {
       title: 'Estimated Monthly Loss',
-      value: formatCurrency(stats.total_estimated_loss),
+      value: formatCurrency(stats.feeders.total_revenue_loss),
       subtitle: 'From detected NTL',
       change: '+8.2%',
       trend: 'up',
-      icon: '�',
+      icon: '💰',
       color: '#f59e0b',
       status: 'info'
     },
     {
       title: 'KILOS Accuracy',
-      value: `${stats.model_accuracy}%`,
+      value: formatPercentage(stats.transformers.avg_loss_percentage),
       subtitle: 'Ensemble model precision',
       change: '+2.1%',
       trend: 'up',
@@ -57,7 +64,7 @@ function MetricsCards({ stats }) {
     },
     {
       title: 'Active Customers',
-      value: '8.0M',
+      value: `${(stats.customers.total_customers / 1000000).toFixed(1)}M`,
       subtitle: 'Monitored accounts',
       change: '+1.2%',
       trend: 'up',

@@ -8,6 +8,30 @@ function InspectionTable({ hotlist }) {
   const [sortConfig, setSortConfig] = useState({ key: 'prediction_confidence', direction: 'desc' });
   const itemsPerPage = 10;
 
+  // Generate recommended action based on risk level and NTL indicators
+  const getRecommendedAction = (item) => {
+    const riskLevel = item.risk_level?.toLowerCase();
+    const confidence = item.prediction_confidence * 100;
+    const features = item.top_contributing_features || [];
+    
+    if (riskLevel === 'critical' && confidence >= 90) {
+      if (features.includes('meter_tamper')) {
+        return 'Immediate field inspection with legal team';
+      }
+      return 'Urgent site visit with security personnel';
+    } else if (riskLevel === 'critical') {
+      return 'Priority inspection within 24 hours';
+    } else if (riskLevel === 'high') {
+      if (features.includes('consumption_anomaly')) {
+        return 'Schedule meter reading audit';
+      }
+      return 'Field inspection within 3 days';
+    } else if (riskLevel === 'medium') {
+      return 'Remote monitoring and follow-up call';
+    }
+    return 'Standard inspection queue';
+  };
+
   const handleSort = (key) => {
     setSortConfig(prev => ({
       key,
@@ -134,8 +158,9 @@ function InspectionTable({ hotlist }) {
                     ))}
                   </td>
                   <td className="actions-cell">
-                    <button className="btn-icon" title="View Details">👁️</button>
-                    <button className="btn-icon" title="Schedule">📅</button>
+                    <span className="recommended-action">
+                      {getRecommendedAction(item)}
+                    </span>
                   </td>
                 </tr>
               );

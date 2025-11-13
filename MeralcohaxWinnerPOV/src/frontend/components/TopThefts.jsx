@@ -3,10 +3,18 @@ import './TopThefts.css';
 
 function TopThefts({ hotlist }) {
   const topCases = (hotlist || [])
+    .map(item => ({
+      ...item,
+      // Convert API fields to component format
+      prediction_confidence: parseFloat(item.ntl_confidence || 0) / 100,
+      estimated_monthly_loss: parseFloat(item.last_billing_amount || 0),
+      location: item.address || item.customer_name
+    }))
     .sort((a, b) => b.prediction_confidence - a.prediction_confidence)
     .slice(0, 5);
 
   const formatCurrency = (value) => {
+    if (!value || value === 0) return '₱0K';
     return `₱${(value / 1000).toFixed(0)}K`;
   };
 
