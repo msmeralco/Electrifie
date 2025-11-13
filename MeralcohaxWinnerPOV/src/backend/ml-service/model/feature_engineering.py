@@ -46,22 +46,32 @@ class FeatureEngineer:
         """Extract all features for a single customer"""
         features = []
         
-        # 1. CONSUMPTION FEATURES
-        consumption = customer.get('consumption_history', [])
+        # 1. CONSUMPTION FEATURES from consumption_array
+        # This is the ONLY signal the model should use - no boolean flags!
+        consumption = customer.get('consumption_array', [])
         if isinstance(consumption, list) and len(consumption) >= 12:
             features.extend(self._consumption_features(consumption))
         else:
             features.extend([0] * 15)  # Placeholder for missing data
         
-        # 2. AMI FEATURES
-        ami_data = customer.get('ami_data', {})
-        features.extend(self._ami_features(ami_data))
+        # 2. CUSTOMER PROFILE FEATURES
+        customer_type_map = {'residential': 0, 'commercial': 1, 'industrial': 2}
+        features.extend([
+            float(customer_type_map.get(customer.get('customer_type', 'residential'), 0)),
+            float(customer.get('contracted_load_kw', 0)),
+            float(customer.get('total_readings', 0)),
+        ])
         
-        # 3. CUSTOMER PROFILE FEATURES
-        features.extend(self._profile_features(customer))
+        # 3. TRANSFORMER/GRID FEATURES
+        features.extend([
+            float(customer.get('capacity_kva', 0)),
+            float(customer.get('transformer_loss', 0)),
+            float(customer.get('transformer_anomalies', 0)),
+        ])
         
-        # 4. GEOSPATIAL FEATURES
-        features.extend(self._geospatial_features(customer))
+        # NOTE: Removed has_meter_tamper, has_billing_anomaly, has_consumption_anomaly
+        # Those are labels derived from the same logic as risk_level (data leakage)
+        # Model must learn NTL patterns ONLY from consumption time series
         
         # Store feature names (first time only)
         if not self.feature_names:

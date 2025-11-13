@@ -15,6 +15,14 @@
 .customers-header h2 {
   margin: 0;
   font-size: 1.25rem;
+  font-family: 'Futura ExtraBold', Futura, 'Arial Black', Arial, sans-serif;
+  color: #220c02;
+}
+.customers-header p {
+  margin: 0;
+  font-size: 1.rem;
+  color: #3a1403;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .customers-content {

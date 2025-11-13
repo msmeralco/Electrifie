@@ -1,12 +1,22 @@
 import PropTypes from 'prop-types';
 import './TheftCategoryChart.css';
 
-function TheftCategoryChart() {
+function TheftCategoryChart({ stats }) {
+  // Use real data from stats API if available, otherwise fallback to sample data
+  const consumptionAnomalyCount = stats?.customers?.consumption_anomaly_count || 42;
+  const meterTamperCount = stats?.customers?.meter_tamper_count || 28;
+  const billingAnomalyCount = stats?.customers?.billing_anomaly_count || 18;
+  
+  // Calculate additional detection method (based on remaining high/critical cases)
+  const totalNTLCases = stats?.customers ? (stats.customers.critical_count + stats.customers.high_count) : 100;
+  const knownMethods = consumptionAnomalyCount + meterTamperCount + billingAnomalyCount;
+  const otherMethods = Math.max(0, totalNTLCases - knownMethods);
+
   const categories = [
-    { name: 'Consumption Anomaly', value: 42, color: '#fb7018', icon: <i class="fi fi-br-chat-arrow-down"></i> },
-    { name: 'AMI Tamper Alert', value: 28, color: '#ef4444', icon: <i class="fi fi-br-triangle-warning"></i> },
-    { name: 'Load Profile Mismatch', value: 18, color: '#f59e0b', icon: <i class="fi fi-br-stats"></i> },
-    { name: 'Geospatial Clustering', value: 12, color: '#8b5cf6', icon: <i class="fi fi-br-region-pin-alt"></i> },
+    { name: 'Consumption Anomaly', value: consumptionAnomalyCount, color: '#fb7018', icon: <i class="fi fi-br-chat-arrow-down"></i> },
+    { name: 'AMI Tamper Alert', value: meterTamperCount, color: '#fb7018', icon: <i class="fi fi-br-triangle-warning"></i> },
+    { name: 'Load Profile Mismatch', value: billingAnomalyCount, color: '#fb7018', icon: <i class="fi fi-br-stats"></i> },
+    { name: 'Geospatial Clustering', value: otherMethods, color: '#fb7018', icon: <i class="fi fi-br-region-pin-alt"></i> },
   ];
 
   const total = categories.reduce((sum, cat) => sum + cat.value, 0);
@@ -58,7 +68,7 @@ function TheftCategoryChart() {
         </div>
         <div className="footer-stat">
           <span className="stat-label">Avg Confidence</span>
-          <span className="stat-value">87.3%</span>
+          <span className="stat-value">{stats?.customers ? (parseFloat(stats.customers.avg_risk_score || 40.3)).toFixed(1) + '%' : '87.3%'}</span>
         </div>
       </div>
     </div>
@@ -66,7 +76,7 @@ function TheftCategoryChart() {
 }
 
 TheftCategoryChart.propTypes = {
-  data: PropTypes.array,
+  stats: PropTypes.object,
 };
 
 export default TheftCategoryChart;

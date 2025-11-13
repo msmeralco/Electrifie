@@ -9,6 +9,14 @@
 .engineering-header h2 {
   margin: 0;
   font-size: 1.25rem;
+  font-family: 'Futura ExtraBold', Futura, 'Arial Black', Arial, sans-serif;
+  color: #220c02;
+}
+.engineering-header p {
+  margin: 0;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #3a1403;
 }
 
 .engineering-grid {

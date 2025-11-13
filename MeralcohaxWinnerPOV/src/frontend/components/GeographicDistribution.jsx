@@ -1,55 +1,72 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './GeographicDistribution.css';
 
-function GeographicDistribution({ hotlist }) {
+function GeographicDistribution() {
+  const [geoData, setGeoData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const regionsPerPage =3; // Show 4 rows per page
+  const itemsPerPage = 5;
 
-  const calculateDistribution = () => {
-    const regions = {};
-    const metroManilaRegions = [
-      'Quezon City', 'Manila', 'Caloocan', 'Pasig', 'Taguig',
-      'Makati', 'Mandaluyong', 'Marikina', 'Parañaque', 'Las Piñas',
-      'Muntinlupa', 'Valenzuela', 'Malabon', 'Navotas', 'San Juan', 'Pasay'
-    ];
-
-    hotlist.forEach((item, index) => {
-      const region = metroManilaRegions[index % metroManilaRegions.length];
-      if (!regions[region]) {
-        regions[region] = {
-          name: region,
-          cases: 0,
-          estimatedLoss: 0,
-          avgConfidence: 0
-        };
+  useEffect(() => {
+    const fetchGeographicData = async () => {
+      try {
+        const response = await fetch('/api/geographic');
+        const data = await response.json();
+        if (data.success) {
+          setGeoData(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch geographic data:', error);
+      } finally {
+        setLoading(false);
       }
-      regions[region].cases += 1;
-      regions[region].estimatedLoss += item.estimated_monthly_loss || 0;
-      regions[region].avgConfidence += item.prediction_confidence || 0;
-    });
+    };
 
-    return Object.values(regions)
-      .map(region => ({
-        ...region,
-        avgConfidence: region.cases > 0 ? region.avgConfidence / region.cases : 0
-      }))
-      .sort((a, b) => b.cases - a.cases);
-  };
+    fetchGeographicData();
+  }, []);
 
-  const regions = calculateDistribution();
-  const totalCases = regions.reduce((sum, r) => sum + r.cases, 0);
-  const totalLoss = regions.reduce((sum, r) => sum + r.estimatedLoss, 0);
+  if (loading) {
+    return (
+      <div className="geographic-distribution">
+        <div className="geo-header">
+          <h3 className="geo-title">Geographic Distribution</h3>
+          <p className="geo-subtitle">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const totalPages = Math.ceil(regions.length / regionsPerPage);
-  const startIndex = (currentPage - 1) * regionsPerPage;
-  const displayedRegions = regions.slice(startIndex, startIndex + regionsPerPage);
+  if (!geoData) {
+    return (
+      <div className="geographic-distribution">
+        <div className="geo-header">
+          <h3 className="geo-title">Geographic Distribution</h3>
+          <p className="geo-subtitle">Failed to load data</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getRiskLevel = (cases) => {
-    if (cases >= 20) return { label: 'Critical', color: '#ef4444' };
-    if (cases >= 10) return { label: 'High', color: '#f59e0b' };
-    if (cases >= 5) return { label: 'Medium', color: '#eab308' };
-    return { label: 'Low', color: '#10b981' };
+  const regions = geoData.regions;
+  const totalCases = geoData.totalCases;
+  const totalLoss = geoData.totalLoss;
+
+  // Pagination math
+  const totalPages = Math.ceil(regions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRegions = regions.slice(startIndex, startIndex + itemsPerPage);
+
+  const getRiskLevel = (riskLevel) => {
+    switch (riskLevel) {
+      case 'critical': return { label: 'Critical', color: '#ef4444' };
+      case 'high': return { label: 'High', color: '#f59e0b' };
+      case 'medium': return { label: 'Medium', color: '#eab308' };
+      case 'low': return { label: 'Low', color: '#10b981' };
+      default: return { label: 'Low', color: '#10b981' };
+    }
   };
 
   const handlePageChange = (page) => {
@@ -58,31 +75,16 @@ function GeographicDistribution({ hotlist }) {
 
   const renderPageNumbers = () => {
     const pages = [];
-    const maxVisible = 3;
-
     for (let i = 1; i <= totalPages; i++) {
-      if (
-        i === 1 ||
-        i === totalPages ||
-        (i >= currentPage - 1 && i <= currentPage + 1)
-      ) {
-        pages.push(
-          <button
-            key={i}
-            className={`page-number ${i === currentPage ? 'active' : ''}`}
-            onClick={() => handlePageChange(i)}
-          >
-            {i}
-          </button>
-        );
-      } else if (
-        i === currentPage - 2 ||
-        i === currentPage + 2
-      ) {
-        pages.push(
-          <span key={`dots-${i}`} className="page-dots">...</span>
-        );
-      }
+      pages.push(
+        <button
+          key={i}
+          className={`page-number ${i === currentPage ? 'active' : ''}`}
+          onClick={() => handlePageChange(i)}
+        >
+          {i}
+        </button>
+      );
     }
     return pages;
   };
@@ -100,7 +102,7 @@ function GeographicDistribution({ hotlist }) {
           <span className="geo-stat-label">Total Cases</span>
         </div>
         <div className="geo-stat">
-          <span className="geo-stat-value">₱{(totalLoss / 1000000).toFixed(1)}M</span>
+          <span className="geo-stat-value">₱{(totalLoss / 1_000_000).toFixed(1)}M</span>
           <span className="geo-stat-label">Est. Monthly Loss</span>
         </div>
         <div className="geo-stat">
@@ -110,41 +112,45 @@ function GeographicDistribution({ hotlist }) {
       </div>
 
       <div className="regions-list">
-        {displayedRegions.map((region, index) => {
-          const risk = getRiskLevel(region.cases);
-          const percentage = totalCases > 0 ? (region.cases / totalCases * 100) : 0;
-          
+        {paginatedRegions.map((region, index) => {
+          const risk = getRiskLevel(region.riskLevel);
+          const percentage = totalCases > 0
+            ? (region.cases / totalCases) * 100
+            : 0;
+
           return (
             <div key={index} className="region-item">
               <div className="region-header">
                 <div className="region-info">
-                  <span className="region-rank">#{startIndex + index + 1}</span>
+                  <span className="region-rank">
+                    #{startIndex + index + 1}
+                  </span>
                   <span className="region-name">{region.name}</span>
                 </div>
                 <span className="region-badge" style={{ background: risk.color }}>
                   {risk.label}
                 </span>
               </div>
-              
+
               <div className="region-stats">
                 <div className="region-stat-item">
                   <span className="stat-label">Cases</span>
-                  <span className="stat-value">{region.cases}</span>
+                  <span className="stat-value">{region.cases.toLocaleString()}</span>
                 </div>
                 <div className="region-stat-item">
                   <span className="stat-label">Loss/Month</span>
-                  <span className="stat-value">₱{(region.estimatedLoss / 1000).toFixed(0)}K</span>
+                  <span className="stat-value">₱{(region.loss / 1000).toFixed(0)}K</span>
                 </div>
                 <div className="region-stat-item">
                   <span className="stat-label">Confidence</span>
                   <span className="stat-value">{(region.avgConfidence * 100).toFixed(1)}%</span>
                 </div>
               </div>
-              
+
               <div className="region-progress">
-                <div 
-                  className="region-progress-bar" 
-                  style={{ 
+                <div
+                  className="region-progress-bar"
+                  style={{
                     width: `${percentage}%`,
                     background: risk.color
                   }}
@@ -158,20 +164,20 @@ function GeographicDistribution({ hotlist }) {
 
       {/* Pagination Controls */}
       <div className="pagination-controls">
-        <button 
-          className={`page-btn ${currentPage === 1 ? 'disabled' : ''}`} 
-          onClick={() => handlePageChange(currentPage - 1)}
+        <button
+          className={`page-btn ${currentPage === 1 ? 'disabled' : ''}`}
           disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
         >
           Previous
         </button>
 
         {renderPageNumbers()}
 
-        <button 
-          className={`page-btn ${currentPage === totalPages ? 'disabled' : ''}`} 
-          onClick={() => handlePageChange(currentPage + 1)}
+        <button
+          className={`page-btn ${currentPage === totalPages ? 'disabled' : ''}`}
           disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
         >
           Next
         </button>
@@ -181,7 +187,7 @@ function GeographicDistribution({ hotlist }) {
 }
 
 GeographicDistribution.propTypes = {
-  hotlist: PropTypes.array.isRequired,
+  hotlist: PropTypes.array
 };
 
 export default GeographicDistribution;

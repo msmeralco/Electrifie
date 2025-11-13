@@ -11,13 +11,13 @@
 .geo-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #111827;
+  color: #220c02;
   margin-bottom: 0.25rem;
 }
 
 .geo-subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #3a1403;
 }
 
 .geo-summary {
@@ -48,7 +48,7 @@
 
 .geo-stat-label {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #3a1403;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -97,7 +97,7 @@
 .region-name {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #111827;
+  color: #220c02;
 }
 
 .region-badge {

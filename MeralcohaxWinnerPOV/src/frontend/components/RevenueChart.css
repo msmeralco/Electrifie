@@ -12,15 +12,17 @@
 }
 
 .chart-title {
+  font-family: 'Futura ExtraBold', Futura, 'Arial Black', Arial, sans-serif;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #111827;
+  color: #220c02;
   margin-bottom: 0.25rem;
 }
 
 .chart-subtitle {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #3a1403;
 }
 
 .chart-controls {
@@ -59,6 +61,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  height: 320px;
+  min-height: 0;
+  justify-content: flex-start;
 }
 
 .chart-bars {
@@ -113,7 +118,7 @@
 .bar-value {
   font-size: 0.75rem;
   font-weight: 600;
-  color: white;
+  color: #3a1403;
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -124,17 +129,19 @@
 
 .bar-label {
   margin-top: 0.5rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #3a1403;
   font-weight: 500;
 }
 
 .chart-legend {
   display: flex;
   gap: 1.5rem;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #e5e7eb;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  align-items: flex-start;
 }
 
 .legend-item {
@@ -142,7 +149,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #3a1403;
 }
 
 .legend-dot {

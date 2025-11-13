@@ -18,9 +18,18 @@ from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 
 from .feature_engineering import FeatureEngineer
-from ..utils.logger import setup_logger
 
-logger = setup_logger()
+# Simple logger fallback
+try:
+    from ..utils.logger import setup_logger
+    logger = setup_logger()
+except:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
 
 
 class NTLDetector:
@@ -108,9 +117,27 @@ class NTLDetector:
         # Feature engineering
         X = self.feature_engineer.transform(training_data)
         
-        # Handle class imbalance with SMOTE
-        smote = SMOTE(random_state=42)
-        X_resampled, y_resampled = smote.fit_resample(X, labels)
+        # Handle class imbalance with SMOTE (less aggressive)
+        # Use sampling_strategy=0.3 to create fewer synthetic samples
+        # This prevents SMOTE from overwhelming real data patterns
+        minority_class_count = int(labels.sum())
+        majority_class_count = len(labels) - minority_class_count
+        
+        print(f"Class distribution before SMOTE:")
+        print(f"  Normal (0): {majority_class_count}")
+        print(f"  NTL (1): {minority_class_count}")
+        
+        # Only apply SMOTE if severe imbalance (ratio > 10:1)
+        if majority_class_count / (minority_class_count + 1) > 10:
+            # Create synthetic samples to bring minority to 30% of majority
+            smote = SMOTE(sampling_strategy=0.3, random_state=42, k_neighbors=5)
+            X_resampled, y_resampled = smote.fit_resample(X, labels)
+            print(f"Class distribution after SMOTE:")
+            print(f"  Normal (0): {(y_resampled == 0).sum()}")
+            print(f"  NTL (1): {(y_resampled == 1).sum()}")
+        else:
+            X_resampled, y_resampled = X, labels
+            print("Skipping SMOTE - class balance acceptable")
         
         # Scale features
         X_scaled = self.scaler.fit_transform(X_resampled)
@@ -253,6 +280,84 @@ class NTLDetector:
         monthly_loss = adjusted_theft * 10
         
         return monthly_loss
+    
+    def evaluate(self, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str, Any]:
+        """
+        Evaluate model performance on test data
+        
+        Args:
+            X_test: Test features DataFrame
+            y_test: Test labels Series
+            
+        Returns:
+            Dictionary with evaluation metrics
+        """
+        from sklearn.metrics import (
+            accuracy_score, precision_score, recall_score, f1_score,
+            roc_auc_score, confusion_matrix, classification_report
+        )
+        
+        # Transform and scale test data
+        X_features = self.feature_engineer.transform(X_test)
+        X_scaled = self.scaler.transform(X_features)
+        
+        # Get ensemble predictions
+        all_predictions = []
+        all_probabilities = []
+        
+        for name, model in self.models.items():
+            preds = model.predict(X_scaled)
+            probs = model.predict_proba(X_scaled)[:, 1]
+            all_predictions.append(preds)
+            all_probabilities.append(probs)
+        
+        # Weighted ensemble predictions
+        weighted_probs = sum(prob * weight for prob, weight in zip(all_probabilities, self.model_weights.values()))
+        
+        # Use higher threshold to reduce false positives
+        # Since we have severe class imbalance, threshold should be tuned
+        # Default 0.5 is too low for 2.5% NTL prevalence
+        decision_threshold = 0.6  # Adjust based on business needs
+        ensemble_predictions = (weighted_probs >= decision_threshold).astype(int)
+        
+        # Calculate metrics
+        metrics = {
+            'accuracy': accuracy_score(y_test, ensemble_predictions),
+            'precision': precision_score(y_test, ensemble_predictions),
+            'recall': recall_score(y_test, ensemble_predictions),
+            'f1_score': f1_score(y_test, ensemble_predictions),
+            'roc_auc': roc_auc_score(y_test, weighted_probs),
+            'confusion_matrix': confusion_matrix(y_test, ensemble_predictions).tolist(),
+            'classification_report': classification_report(y_test, ensemble_predictions, output_dict=True)
+        }
+        
+        logger.info(f"Model Evaluation - Accuracy: {metrics['accuracy']:.4f}, F1: {metrics['f1_score']:.4f}, ROC-AUC: {metrics['roc_auc']:.4f}")
+        
+        return metrics
+    
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        """
+        Get probability predictions for NTL detection
+        
+        Args:
+            X: Features DataFrame
+            
+        Returns:
+            Array of probabilities for each class [prob_normal, prob_theft]
+        """
+        # Transform and scale features
+        X_features = self.feature_engineer.transform(X)
+        X_scaled = self.scaler.transform(X_features)
+        
+        # Get ensemble probabilities using proper weighted average
+        ensemble_probs = np.zeros((X_scaled.shape[0], 2))
+        
+        for name, model in self.models.items():
+            probs = model.predict_proba(X_scaled)
+            # Add weighted contribution to ensemble
+            ensemble_probs += probs * self.model_weights[name]
+        
+        return ensemble_probs
     
     def _save_model(self):
         """Save trained model to disk"""

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
 import './responsive.css';
+
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import MetricsCards from './components/MetricsCards';
@@ -34,35 +35,62 @@ function Dashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [hotlistRes, statsRes] = await Promise.all([
-        fetch(`${API_URL}/hotlist?limit=100`),
+
+      const [allCustomersRes, hotlistRes, statsRes] = await Promise.all([
+        fetch(`${API_URL}/customers?limit=75000`),
+        fetch(`${API_URL}/hotlist?limit=75000`),
         fetch(`${API_URL}/stats`)
       ]);
 
-      if (!hotlistRes.ok || !statsRes.ok) {
+      if (!allCustomersRes.ok || !hotlistRes.ok || !statsRes.ok) {
         throw new Error('Failed to fetch data');
       }
 
+      const allCustomersData = await allCustomersRes.json();
       const hotlistData = await hotlistRes.json();
       const statsData = await statsRes.json();
 
-      // Transform API data to match component expectations
-      const transformedHotlist = (hotlistData.hotlist || []).map(item => {
-        const ntlConfidence = parseFloat(item.ntl_confidence) || 0;
-        const lastBilling = parseFloat(item.last_billing_amount) || 0;
-        
-        // Build feature list from boolean flags
-        const features = [];
-        if (item.has_meter_tamper) features.push('meter_tamper');
-        if (item.has_billing_anomaly) features.push('billing_anomaly');
-        if (item.has_consumption_anomaly) features.push('consumption_anomaly');
-        
+      const hotlistArray = hotlistData.hotlist || [];
+      const allCustomersArray = allCustomersData.customers || [];
+
+      const lowMediumCustomers = allCustomersArray
+        .filter(c => c.risk_level === 'low' || c.risk_level === 'medium')
+        .slice(0, 5000)
+        .map(item => ({
+          ...item,
+          address: `${item.customer_name} Location`,
+          avg_monthly_kwh: 200 + Math.random() * 300,
+          last_billing_amount: (200 + Math.random() * 300) * 15,
+          ntl_confidence: parseFloat(item.risk_score) || 0,
+          days_since_inspection: Math.floor(Math.random() * 365)
+        }));
+
+      const combinedCustomers = [...hotlistArray, ...lowMediumCustomers];
+
+      const transformedHotlist = combinedCustomers.map(item => {
+        const ntlConfidence = parseFloat(item.ntl_confidence || item.risk_score) || 0;
+        const avgMonthlyKwh = parseFloat(item.avg_monthly_kwh) || 0;
+
+        let lossPercentage = 0;
+        const riskLevel = item.risk_level?.toLowerCase();
+
+        if (riskLevel === 'critical') {
+          lossPercentage = 0.35 + (ntlConfidence / 100) * 0.25;
+        } else if (riskLevel === 'high') {
+          lossPercentage = 0.20 + (ntlConfidence / 100) * 0.15;
+        } else if (riskLevel === 'medium') {
+          lossPercentage = 0.10 + (ntlConfidence / 100) * 0.10;
+        } else {
+          lossPercentage = 0.02 + (ntlConfidence / 100) * 0.08;
+        }
+
+        const estimatedMonthlyLoss = avgMonthlyKwh * lossPercentage * 12;
+
         return {
           ...item,
           prediction_confidence: ntlConfidence / 100,
-          estimated_monthly_loss: lastBilling,
-          location: item.address || item.customer_name,
-          top_contributing_features: features
+          estimated_monthly_loss: Math.round(estimatedMonthlyLoss),
+          location: item.address || item.customer_name
         };
       });
 
@@ -92,7 +120,7 @@ function Dashboard() {
         return (
           <div className="dashboard-row">
             <div className="chart-card chart-full">
-              <GeographicDistribution hotlist={hotlist} />
+              <GeographicDistribution />
             </div>
           </div>
         );
@@ -108,52 +136,18 @@ function Dashboard() {
 
       case 'issues':
         return (
-          <>
-            <div className="dashboard-row">
-              <div className="chart-card chart-1-2">
-                <TopThefts hotlist={hotlist} />
-              </div>
-              <div className="chart-card chart-1-2">
-                <TheftCategoryChart />
-              </div>
+          <div className="dashboard-row">
+            <div className="chart-card chart-1-2">
+              <TopThefts hotlist={hotlist} />
             </div>
-
-
-          </>
+            <div className="chart-card chart-1-2">
+              <TheftCategoryChart />
+            </div>
+          </div>
         );
 
       default:
-        return (
-          <>
-            <div className="dashboard-row">
-              <div className="chart-card chart-2-3">
-                <RevenueChart stats={stats} />
-              </div>
-              <div className="chart-card chart-1-3">
-                <TheftCategoryChart />
-              </div>
-            </div>
-
-            <div className="dashboard-row">
-              <div className="chart-card chart-1-2">
-              <GeographicDistribution hotlist={hotlist} />
-            </div>
-              <div className="chart-card chart-full">
-                <TopThefts hotlist={hotlist} />
-              </div>
-            </div>
-
-            <div className="table-section">
-              <InspectionTable hotlist={hotlist} />
-            </div>
-
-            <div className="dashboard-row">
-            <div className="chart-card chart-1-2">
-              <ImpactMetrics />
-            </div>
-          </div>
-          </>
-        );
+        return null;
     }
   };
 
@@ -181,21 +175,48 @@ function Dashboard() {
             <>
               {activeView === 'dashboard' && (
                 <div className="dashboard-view-content">
-                  {stats && <MetricsCards stats={stats} />}
 
-                  {/* FILTER BUTTONS */}
-                  <div className="filter-buttons" style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>
-                    {['all', 'revenue', 'geographic', 'impact', 'issues'].map((filter) => (
+                  <MetricsCards stats={stats} />
+
+                  {/* Row 1 */}
+                  <div className="dashboard-row">
+                    <div className="chart-card chart-2-3">
+                      <RevenueChart stats={stats} />
+                    </div>
+                    <div className="chart-card chart-1-3">
+                      <TheftCategoryChart stats={stats} />
+                    </div>
+                  </div>
+
+                  {/* Row 2 */}
+                  <div className="dashboard-row">
+                    <div className="chart-card chart-1-2">
+                      <GeographicDistribution />
+                    </div>
+                    <div className="chart-card chart-1-2">
+                      <ImpactMetrics />
+                    </div>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="filter-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {['all', 'revenue', 'geographic', 'impact', 'issues'].map(filter => (
                       <button
                         key={filter}
                         onClick={() => setActiveFilter(filter)}
                         className={`filter-btn ${activeFilter === filter ? 'active' : ''}`}
                       >
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        {filter.toUpperCase()}
                       </button>
                     ))}
                   </div>
 
+                  {/* Table */}
+                  <div className="table-section">
+                    <InspectionTable hotlist={hotlist} totalCustomers={stats?.customers?.total_customers} />
+                  </div>
+
+                  {/* Filter results */}
                   {renderCharts()}
                 </div>
               )}
@@ -205,24 +226,18 @@ function Dashboard() {
                   <NTLMap hotlist={hotlist} />
                 </div>
               )}
-              
+
               {activeView === 'fieldops' && (
-                <div className="fieldops-view">
-                  <FieldOpsView hotlist={hotlist} stats={stats} />
-                </div>
+                <FieldOpsView hotlist={hotlist} stats={stats} />
               )}
 
               {activeView === 'engineering' && (
-              <div className="engineering-view">
-                 <EngineeringView hotlist={hotlist} stats={stats} />
-               </div>
-             )}
+                <EngineeringView hotlist={hotlist} stats={stats} />
+              )}
 
-             {activeView === 'customers' && (
-              <div className="customers-view">
-                 <CustomerServiceView hotlist={hotlist} stats={stats} />
-               </div>
-             )}
+              {activeView === 'customers' && (
+                <CustomerServiceView hotlist={hotlist} stats={stats} />
+              )}
             </>
           )}
         </div>

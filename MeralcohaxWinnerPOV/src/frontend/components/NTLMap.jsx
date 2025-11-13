@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Map, { NavigationControl, Marker, Popup } from 'react-map-gl';
 import { DeckGL } from '@deck.gl/react';
 import { HeatmapLayer } from '@deck.gl/aggregation-layers';
@@ -83,9 +83,75 @@ const generateNTLData = () => {
 function NTLMap({ hotlist = [] }) {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
   const [popupInfo, setPopupInfo] = useState(null);
-  const [is3D, setIs3D] = useState(false); // Toggle between 2D and 3D
+  const [is3D, setIs3D] = useState(false);
+  const [geoData, setGeoData] = useState(null);
 
-  const { hotspots, points } = useMemo(() => generateNTLData(), []);
+  useEffect(() => {
+    const fetchGeographicData = async () => {
+      try {
+        const response = await fetch('/api/geographic');
+        const data = await response.json();
+        if (data.success) {
+          setGeoData(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch geographic data for map:', error);
+        // Fallback to sample data
+        setGeoData({
+          success: true,
+          regions: generateNTLData().hotspots.map(h => ({
+            name: h.area,
+            cases: h.cases,
+            loss: h.loss,
+            avgConfidence: 0.75,
+            riskLevel: h.risk,
+            lat: h.lat,
+            lng: h.lng
+          }))
+        });
+      }
+    };
+
+    fetchGeographicData();
+  }, []);
+
+  // Transform API data into map format
+  const { hotspots, points } = useMemo(() => {
+    if (!geoData || !geoData.regions) {
+      return generateNTLData(); // Fallback to sample data
+    }
+
+    // Convert API data to hotspots format
+    const hotspots = geoData.regions.map(region => ({
+      lng: region.lng,
+      lat: region.lat,
+      cases: region.cases,
+      loss: region.loss,
+      area: region.name,
+      risk: region.riskLevel,
+      avgConfidence: region.avgConfidence
+    }));
+
+    // Create scatter points for 3D heatmap
+    const points = [];
+    hotspots.forEach(hotspot => {
+      points.push(hotspot);
+      // Add points around each hotspot for heatmap density
+      const numPoints = Math.min(Math.floor(hotspot.cases / 200), 50); // Scale points based on cases
+      for (let i = 0; i < numPoints; i++) {
+        points.push({
+          lng: hotspot.lng + (Math.random() - 0.5) * 0.02,
+          lat: hotspot.lat + (Math.random() - 0.5) * 0.02,
+          cases: 1,
+          loss: hotspot.loss / hotspot.cases,
+          area: hotspot.area,
+          risk: hotspot.risk
+        });
+      }
+    });
+
+    return { hotspots, points };
+  }, [geoData]);
 
   // Update pitch when switching between 2D and 3D
   const currentViewState = {
@@ -114,9 +180,13 @@ function NTLMap({ hotlist = [] }) {
         getPosition: d => [d.lng, d.lat],
         getRadius: d => Math.sqrt(d.cases) * 100,
         getFillColor: d => {
-          if (d.cases > 40) return [239, 68, 68, 180]; // Critical - red
-          if (d.cases > 30) return [251, 112, 24, 180]; // High - orange
-          return [245, 158, 11, 150]; // Medium - yellow
+          switch(d.risk) {
+            case 'critical': return [239, 68, 68, 180];  // Critical - red (#ef4444)
+            case 'high': return [251, 112, 24, 180];     // High - orange (#fb7018)  
+            case 'medium': return [245, 158, 11, 180];   // Medium - yellow (#f59e0b)
+            case 'low': return [16, 185, 129, 180];      // Low - green (#10b981)
+            default: return [16, 185, 129, 180];         // Default to low (green)
+          }
         },
         pickable: true,
         radiusScale: 6,
@@ -256,6 +326,11 @@ function NTLMap({ hotlist = [] }) {
                     <div style={{ marginBottom: '4px' }}>
                       <strong>Loss:</strong> {formatCurrency(popupInfo.loss)}
                     </div>
+                    {popupInfo.avgConfidence && (
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Avg Confidence:</strong> {(popupInfo.avgConfidence * 100).toFixed(1)}%
+                      </div>
+                    )}
                     <div>
                       <strong>Risk:</strong>{' '}
                       <span style={{ 
@@ -291,15 +366,19 @@ function NTLMap({ hotlist = [] }) {
             <div className="legend-items">
               <div className="legend-item">
                 <div className="legend-circle" style={{ background: '#ef4444' }} />
-                <span>Critical (&gt;40)</span>
+                <span>Critical (85%)</span>
               </div>
               <div className="legend-item">
                 <div className="legend-circle" style={{ background: '#fb7018' }} />
-                <span>High (30-40)</span>
+                <span>High (70%)</span>
               </div>
               <div className="legend-item">
                 <div className="legend-circle" style={{ background: '#f59e0b' }} />
-                <span>Medium (&lt;30)</span>
+                <span>Medium (55%)</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-circle" style={{ background: '#10b981' }} />
+                <span>Low (35%)</span>
               </div>
             </div>
           </div>
@@ -307,11 +386,11 @@ function NTLMap({ hotlist = [] }) {
           {/* Stats */}
           <div className="map-stats">
             <div className="map-stat">
-              <span className="stat-value">8</span>
+              <span className="stat-value">{geoData?.regions?.length || 16}</span>
               <span className="stat-label">Active Clusters</span>
             </div>
             <div className="map-stat">
-              <span className="stat-value">297</span>
+              <span className="stat-value">{geoData?.totalCases?.toLocaleString() || '72,123'}</span>
               <span className="stat-label">Total Cases</span>
             </div>
           </div>

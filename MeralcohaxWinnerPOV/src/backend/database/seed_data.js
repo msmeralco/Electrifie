@@ -313,24 +313,14 @@ async function generateCustomers(connection, transformers) {
       
       const profile = CUSTOMER_TYPES[customerType];
       
-      // Determine if this customer has NTL behavior
+      // Determine if this customer has NTL behavior (probability based on area risk)
       const hasNtl = Math.random() < (profile.ntlProbability * transformer.risk_score / 50);
-      
-      let riskScore, riskLevel, ntlConfidence;
-      if (hasNtl) {
-        riskScore = 60 + Math.random() * 40;
-        riskLevel = riskScore > 80 ? 'critical' : 'high';
-        ntlConfidence = 70 + Math.random() * 30;
-      } else {
-        riskScore = Math.random() * 40;
-        riskLevel = riskScore > 30 ? 'medium' : 'low';
-        ntlConfidence = riskScore;
-      }
       
       // Random location near transformer
       const lat = transformer.location_lat + (Math.random() - 0.5) * 0.002;
       const lng = transformer.location_lng + (Math.random() - 0.5) * 0.002;
       
+      // Create customer with TEMPORARY risk values (will be calculated later from consumption)
       const customer = {
         customer_id: `CUST-${String(customerCount).padStart(8, '0')}`,
         account_number: `MER-${String(customerCount).padStart(10, '0')}`,
@@ -346,15 +336,17 @@ async function generateCustomers(connection, transformers) {
         service_voltage: '230V',
         contracted_load_kw: profile.avgConsumption / 100,
         installation_date: new Date(2000 + Math.floor(Math.random() * 24), Math.floor(Math.random() * 12), 1),
-        risk_score: riskScore,
-        risk_level: riskLevel,
-        ntl_confidence: ntlConfidence,
+        risk_score: 0,  // Will be calculated from consumption patterns
+        risk_level: 'low',  // Will be calculated from consumption patterns
+        ntl_confidence: 0,  // Will be calculated from consumption patterns
         is_active: true,
-        is_flagged: hasNtl && Math.random() > 0.5,
-        has_meter_tamper: hasNtl && Math.random() > 0.7,
-        has_billing_anomaly: hasNtl && Math.random() > 0.6,
-        has_consumption_anomaly: hasNtl,
+        is_flagged: false,  // Will be set after analyzing consumption
+        // Boolean flags set with some noise (not perfect correlation with hasNtl)
+        has_meter_tamper: hasNtl ? Math.random() > 0.4 : Math.random() > 0.95,  // 60% if NTL, 5% false positive
+        has_billing_anomaly: hasNtl ? Math.random() > 0.5 : Math.random() > 0.90,  // 50% if NTL, 10% false positive
+        has_consumption_anomaly: hasNtl ? Math.random() > 0.3 : Math.random() > 0.85,  // 70% if NTL, 15% false positive
         last_inspection_date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+        _hasNtlBehavior: hasNtl,  // Internal flag for consumption generation
       };
       
       await connection.execute(`
@@ -409,32 +401,35 @@ async function generateConsumptionReadings(connection, customers) {
         baseKwh = 2000 + Math.random() * 3000; // 2000-5000 kWh/month (industrial)
       }
       
-      // Apply NTL patterns for high-risk customers
-      let consumptionMultiplier = 1.0;
-      if (customer.risk_level === 'critical' || customer.risk_level === 'high') {
-        // High-risk customers show declining consumption or suspiciously low usage
-        consumptionMultiplier = 0.3 + Math.random() * 0.4; // 30-70% of normal
-      }
-      
-      // Generate 12 months of readings
+      // Generate 12 months of readings with EXTREME NTL patterns for flagged customers
       for (let monthsAgo = 11; monthsAgo >= 0; monthsAgo--) {
         const readingDate = new Date();
         readingDate.setMonth(readingDate.getMonth() - monthsAgo);
         readingDate.setDate(1); // First of the month
         
-        // Add some variation month-to-month (±15%)
+        // Start with normal consumption
         const variation = 0.85 + Math.random() * 0.3;
-        let kwhConsumed = baseKwh * consumptionMultiplier * variation;
+        let kwhConsumed = baseKwh * variation;
         
-        // For tampering cases, show sudden drops in recent months
-        if (customer.has_meter_tamper && monthsAgo < 3) {
-          kwhConsumed *= 0.5; // Recent sharp drop
+        // Apply SEVERE NTL patterns for flagged customers
+        if (customer.has_meter_tamper) {
+          // Show dramatic consumption drop in recent 6 months
+          if (monthsAgo < 6) {
+            kwhConsumed *= 0.25 + Math.random() * 0.15; // Only 25-40% in recent months
+          }
         }
         
-        // For consumption anomalies, show erratic patterns
         if (customer.has_consumption_anomaly) {
-          if (Math.random() < 0.3) {
-            kwhConsumed *= (Math.random() < 0.5 ? 0.3 : 2.5); // Extreme highs/lows
+          // Create highly erratic patterns - frequent extreme spikes and drops
+          if (Math.random() < 0.5) {  // 50% of readings are anomalies
+            kwhConsumed *= (Math.random() < 0.5 ? 0.1 : 3.0); // Extreme: 10% or 300%
+          }
+        }
+        
+        if (customer.has_billing_anomaly) {
+          // Show unusual patterns: periods of very low consumption
+          if (monthsAgo < 4 || Math.random() < 0.3) {
+            kwhConsumed *= 0.2 + Math.random() * 0.2; // 20-40% of normal
           }
         }
         
@@ -475,6 +470,120 @@ async function generateConsumptionReadings(connection, customers) {
 }
 
 /**
+ * Update customer risk levels based on actual consumption patterns
+ * This runs AFTER consumption data is generated to avoid data leakage
+ */
+async function updateRiskLevelsFromConsumption(connection, customers) {
+  console.log('Calculating risk levels from consumption patterns...');
+  
+  let updateCount = 0;
+  
+  for (const customer of customers) {
+    // Fetch this customer's consumption history
+    const [rows] = await connection.execute(
+      `SELECT kwh_consumed 
+       FROM consumption_readings 
+       WHERE customer_id = ? 
+       ORDER BY reading_date ASC`,
+      [customer.customer_id]
+    );
+    
+    if (rows.length < 12) continue;
+    
+    // Convert Decimal objects to numbers for JavaScript math
+    const consumption = rows.map(r => parseFloat(r.kwh_consumed));
+    
+    // Calculate statistical features
+    const avg = consumption.reduce((a, b) => a + b, 0) / consumption.length;
+    const stdDev = Math.sqrt(consumption.reduce((sq, n) => sq + Math.pow(n - avg, 2), 0) / consumption.length);
+    const coefficientOfVariation = stdDev / avg;
+    
+    // Calculate trend (recent vs historical)
+    const recent3 = consumption.slice(-3).reduce((a, b) => a + b, 0) / 3;
+    const historical9 = consumption.slice(0, 9).reduce((a, b) => a + b, 0) / 9;
+    const dropPercentage = historical9 > 0 ? ((historical9 - recent3) / historical9) * 100 : 0;
+    
+    // Detect anomalies (extreme deviations)
+    const anomalyCount = consumption.filter(c => Math.abs(c - avg) > 1.5 * stdDev).length;
+    
+    // Calculate risk score based on multiple signals (0-100 scale)
+    let riskScore = 10;  // Start with base score of 10
+    
+    // Signal 1: Sudden drop in consumption (major tampering indicator)
+    // Only count positive drops (consumption decreased)
+    if (dropPercentage > 20) riskScore += 40;
+    else if (dropPercentage > 10) riskScore += 30;
+    else if (dropPercentage > 5) riskScore += 15;
+    
+    // Signal 2: High variability (erratic usage pattern) - MORE SENSITIVE
+    if (coefficientOfVariation > 0.4) riskScore += 40;
+    else if (coefficientOfVariation > 0.25) riskScore += 30;
+    else if (coefficientOfVariation > 0.15) riskScore += 20;
+    else if (coefficientOfVariation > 0.10) riskScore += 10;
+    
+    // Signal 3: Multiple anomalies (spikes and drops) - MORE SENSITIVE
+    if (anomalyCount >= 3) riskScore += 35;
+    else if (anomalyCount >= 2) riskScore += 25;
+    else if (anomalyCount >= 1) riskScore += 15;
+    
+    // Signal 4: Consumption much lower than expected for customer type
+    let expectedMin;
+    if (customer.customer_type === 'residential') expectedMin = 100;
+    else if (customer.customer_type === 'commercial') expectedMin = 400;
+    else expectedMin = 1500;
+    
+    if (avg < expectedMin * 0.3) riskScore += 25;
+    else if (avg < expectedMin * 0.5) riskScore += 15;
+    
+    // Debug: Log first 10 customers to see what's happening
+    if (updateCount < 10) {
+      console.log(`\n  [DEBUG] ${customer.customer_id}:`);
+      console.log(`    CV=${coefficientOfVariation.toFixed(3)}, Drop=${dropPercentage.toFixed(1)}%, Anomalies=${anomalyCount}, Avg=${avg.toFixed(1)}`);
+      console.log(`    Score BEFORE random: ${riskScore.toFixed(1)}`);
+    }
+    
+    // Add some randomness (±5) to make it imperfect and more realistic
+    riskScore += (Math.random() - 0.5) * 10;
+    riskScore = Math.max(0, Math.min(100, riskScore));
+    
+    if (updateCount < 10) {
+      console.log(`    Score AFTER random: ${riskScore.toFixed(1)}`);
+    }
+    
+    // Determine risk level with adjusted thresholds
+    let riskLevel, ntlConfidence;
+    if (riskScore >= 60) {
+      riskLevel = 'critical';
+      ntlConfidence = 80 + Math.random() * 20;
+    } else if (riskScore >= 45) {
+      riskLevel = 'high';
+      ntlConfidence = 60 + Math.random() * 20;
+    } else if (riskScore >= 25) {
+      riskLevel = 'medium';
+      ntlConfidence = 40 + Math.random() * 20;
+    } else {
+      riskLevel = 'low';
+      ntlConfidence = Math.random() * 40;
+    }
+    
+    // Update customer record
+    await connection.execute(
+      `UPDATE customers 
+       SET risk_score = ?, risk_level = ?, ntl_confidence = ?, is_flagged = ?
+       WHERE customer_id = ?`,
+      [riskScore, riskLevel, ntlConfidence, riskLevel === 'critical' || riskLevel === 'high', customer.customer_id]
+    );
+    
+    updateCount++;
+    if (updateCount % 5000 === 0) {
+      console.log(`  Updated ${updateCount}/${customers.length} customers...`);
+    }
+  }
+  
+  console.log(`✓ Updated risk levels for ${updateCount} customers based on consumption patterns\n`);
+}
+
+/**
  * Main execution
  */
 async function generateAllData() {
@@ -502,6 +611,10 @@ async function generateAllData() {
     const transformers = await generateTransformers(connection, feeders);
     const customers = await generateCustomers(connection, transformers);
     await generateConsumptionReadings(connection, customers);
+    
+    // NOW calculate risk levels based on actual consumption patterns
+    // This ensures no data leakage - risk_level is derived from consumption, not vice versa
+    await updateRiskLevelsFromConsumption(connection, customers);
     
     console.log('\n✅ Data generation complete!');
     console.log(`   Feeders: ${feeders.length}`);

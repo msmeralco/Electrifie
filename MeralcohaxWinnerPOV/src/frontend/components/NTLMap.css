@@ -75,10 +75,41 @@
 .legend-title {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #111827;
+  color: #220c02;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.legend-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.legend-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.legend-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.legend-stat-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
 }
 
 .legend-items {

@@ -3,32 +3,47 @@ import PropTypes from 'prop-types';
 import './RevenueChart.css';
 
 function RevenueChart({ stats }) {
-  const [period, setPeriod] = useState('month');
-  const [chartData, setChartData] = useState({
-    month: { labels: [], data: [] },
-    week: { labels: [], data: [] },
-    year: { labels: [], data: [] },
-  });
+  
+  const [period, setPeriod] = useState("month");
+  const [chartData, setChartData] = useState({ month: {}, week: {}, year: {} });
 
-  // Generate mock data once when component mounts
   useEffect(() => {
     const now = new Date();
 
-    // --- MONTH ---
+    // ---------- MONTH (your friend's logic merged) ----------
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonth = now.getMonth();
-    const monthData = months.map((_, i) => (i <= currentMonth ? 10 + Math.random() * 15 : null));
 
-    // --- WEEK (Mon-Sun) ---
+    // — compute loss-prevention base (your friend's code)
+    const totalMonthlyLoss = stats?.feeders?.total_revenue_loss
+      ? parseFloat(stats.feeders.total_revenue_loss) / 1_000_000
+      : 17.0; // fallback (millions)
+
+    const baseMonthlyPrevention = totalMonthlyLoss * 0.8;
+
+    const monthData = months.map((_, index) => {
+      if (index > currentMonth) return null;
+
+      // Variation ±20% (your friend's logic)
+      const variation = 0.8 + (Math.random() * 0.4);
+      return baseMonthlyPrevention * variation;
+    });
+
+    // ---------- WEEK (Mon–Sun, includes weekends now) ----------
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    // map JS getDay() (Sun=0..Sat=6) to Mon=0..Sun=6
-    const todayIndex = (now.getDay() + 6) % 7;
-    const weekData = weekdays.map((_, i) => (i <= todayIndex ? 2 + Math.random() * 5 : null));
 
-    // --- YEAR (last 6 years including current) ---
+    // Convert JS getDay() to Mon=0..Sun=6
+    const todayIndex = (now.getDay() + 6) % 7;
+
+    const weekData = weekdays.map((_, i) =>
+      i <= todayIndex ? 2 + Math.random() * 5 : null
+    );
+
+    // ---------- YEAR (last 6 years) ----------
     const years = [];
     const currentYear = now.getFullYear();
     for (let y = currentYear - 5; y <= currentYear; y++) years.push(y);
+
     const yearData = years.map(() => 100 + Math.random() * 300);
 
     setChartData({
@@ -36,20 +51,21 @@ function RevenueChart({ stats }) {
       week: { labels: weekdays, data: weekData },
       year: { labels: years, data: yearData },
     });
-  }, []);
+  }, [stats]);   // stats change re-generates data once
 
-  const labels = chartData[period].labels || [];
-  const data = chartData[period].data || [];
 
-  // find last non-null index in the original data array
+  // ---------- RENDERING LOGIC ----------
+  const labels = chartData[period]?.labels || [];
+  const data = chartData[period]?.data || [];
+
   const lastIndex = (() => {
     for (let i = data.length - 1; i >= 0; i--) {
-      if (data[i] !== null && data[i] !== undefined) return i;
+      if (data[i] != null) return i;
     }
     return -1;
   })();
 
-  const validData = data.filter(v => v !== null && v !== undefined);
+  const validData = data.filter(v => v != null);
   const maxValue = validData.length ? Math.max(...validData) : 1;
 
   return (
@@ -78,7 +94,7 @@ function RevenueChart({ stats }) {
       <div className="chart-container">
         <div className="chart-bars">
           {data.map((value, index) =>
-            value !== null && value !== undefined ? (
+            value != null ? (
               <div key={index} className="bar-wrapper">
                 <div
                   className="bar"
@@ -87,7 +103,7 @@ function RevenueChart({ stats }) {
                     background:
                       index === lastIndex
                         ? 'linear-gradient(180deg, #fb7018 0%, #ff9800 100%)'
-                        : 'linear-gradient(180deg, #ffcc80 0%, #ffe0b2 100%)',
+                        : 'linear-gradient(180deg, #ffcc80 0%, #ffe0b2 100%)'
                   }}
                 >
                   <div className="bar-value">₱{value.toFixed(1)}M</div>

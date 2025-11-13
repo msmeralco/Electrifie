@@ -9,15 +9,17 @@
 }
 
 .impact-title {
+  font-family: 'Futura ExtraBold', Futura, 'Arial Black', Arial, sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #111827;
+  color: #220c02;
   margin-bottom: 0.25rem;
 }
 
 .impact-subtitle {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #3a1403;
 }
 
 .impact-grid {

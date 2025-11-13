@@ -2,7 +2,7 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import './InspectionTable.css';
 
-function InspectionTable({ hotlist }) {
+function InspectionTable({ hotlist, totalCustomers }) {
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: 'prediction_confidence', direction: 'desc' });
@@ -65,7 +65,14 @@ function InspectionTable({ hotlist }) {
   };
 
   const formatCurrency = (value) => {
+    if (value < 1000) {
+      return `₱${Math.round(value)}`;
+    }
     return `₱${(value / 1000).toFixed(1)}K`;
+  };
+
+  const formatConsumption = (kwh) => {
+    return `${Math.round(kwh)} kWh`;
   };
 
   const getRiskBadge = (confidence) => {
@@ -78,7 +85,7 @@ function InspectionTable({ hotlist }) {
   return (
     <div className="inspection-table">
       <div className="table-header">
-        <h3 className="table-title">Inspection Queue ({hotlist.length} cases)</h3>
+        <h3 className="table-title">Inspection Queue ({totalCustomers ? totalCustomers.toLocaleString() : hotlist.length} cases)</h3>
         <div className="table-actions">
           {selectedRows.length > 0 && (
             <span className="selected-count">{selectedRows.length} selected</span>
@@ -108,6 +115,12 @@ function InspectionTable({ hotlist }) {
               <th onClick={() => handleSort('location')}>
                 Location
                 {sortConfig.key === 'location' && (
+                  <span className="sort-icon">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                )}
+              </th>
+              <th onClick={() => handleSort('avg_monthly_kwh')}>
+                Monthly Usage
+                {sortConfig.key === 'avg_monthly_kwh' && (
                   <span className="sort-icon">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
                 )}
               </th>
@@ -141,6 +154,9 @@ function InspectionTable({ hotlist }) {
                   </td>
                   <td className="customer-id">{item.customer_id}</td>
                   <td>{item.location}</td>
+                  <td className="consumption-cell">
+                    {formatConsumption(parseFloat(item.avg_monthly_kwh) || 0)}
+                  </td>
                   <td>
                     <span className={`risk-badge ${risk.class}`}>
                       {risk.label}
@@ -214,6 +230,7 @@ InspectionTable.propTypes = {
     estimated_monthly_loss: PropTypes.number.isRequired,
     top_contributing_features: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
+  totalCustomers: PropTypes.number,
 };
 
 export default InspectionTable;
