@@ -9,7 +9,6 @@ from typing import List
 from scipy import stats
 from geopy.distance import geodesic
 
-
 class FeatureEngineer:
     """
     Generates features from raw customer data

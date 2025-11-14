@@ -20,6 +20,13 @@
   color: #3a1403;
 }
 
+.geo-context {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0 0;
+  font-style: italic;
+}
+
 .geo-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

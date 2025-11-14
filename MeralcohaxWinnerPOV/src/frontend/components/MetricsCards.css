@@ -32,6 +32,95 @@
   margin-bottom: 0.75rem;
 }
 
+.metric-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metric-tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.metric-info {
+  font-size: 1rem;
+  color: #6b7280;
+  cursor: help;
+  opacity: 0.8;
+  transition: all 0.2s;
+  padding: 2px 4px;
+  border-radius: 50%;
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.metric-info:hover {
+  opacity: 1;
+  background: rgba(107, 114, 128, 0.2);
+  border-color: rgba(107, 114, 128, 0.4);
+}
+
+.metric-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
+}
+
+.metric-tooltip-container:hover .metric-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.tooltip-content {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.tooltip-content strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.tooltip-content ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.tooltip-content li {
+  margin: 0.25rem 0;
+}
+
+.tooltip-content p {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+  line-height: 1;
+}
+
+.tooltip-close:hover {
+  color: #374151;
+}
+
 .metric-title {
   font-size: 0.875rem;
   color: #6b7280;

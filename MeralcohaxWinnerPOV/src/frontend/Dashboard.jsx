@@ -105,7 +105,9 @@ function Dashboard() {
     }
   };
 
-  const renderCharts = () => {
+  const renderFilteredView = () => {
+    if (activeFilter === 'all') return null;
+
     switch (activeFilter) {
       case 'revenue':
         return (
@@ -115,7 +117,6 @@ function Dashboard() {
             </div>
           </div>
         );
-
       case 'geographic':
         return (
           <div className="dashboard-row">
@@ -124,7 +125,6 @@ function Dashboard() {
             </div>
           </div>
         );
-
       case 'impact':
         return (
           <div className="dashboard-row">
@@ -133,7 +133,6 @@ function Dashboard() {
             </div>
           </div>
         );
-
       case 'issues':
         return (
           <div className="dashboard-row">
@@ -141,11 +140,10 @@ function Dashboard() {
               <TopThefts hotlist={hotlist} />
             </div>
             <div className="chart-card chart-1-2">
-              <TheftCategoryChart />
+              <TheftCategoryChart stats={stats} />
             </div>
           </div>
         );
-
       default:
         return null;
     }
@@ -176,29 +174,7 @@ function Dashboard() {
               {activeView === 'dashboard' && (
                 <div className="dashboard-view-content">
 
-                  <MetricsCards stats={stats} />
-
-                  {/* Row 1 */}
-                  <div className="dashboard-row">
-                    <div className="chart-card chart-2-3">
-                      <RevenueChart stats={stats} />
-                    </div>
-                    <div className="chart-card chart-1-3">
-                      <TheftCategoryChart stats={stats} />
-                    </div>
-                  </div>
-
-                  {/* Row 2 */}
-                  <div className="dashboard-row">
-                    <div className="chart-card chart-1-2">
-                      <GeographicDistribution />
-                    </div>
-                    <div className="chart-card chart-1-2">
-                      <ImpactMetrics />
-                    </div>
-                  </div>
-
-                  {/* Filters */}
+                  {/* FILTERS AT TOP (fixed) */}
                   <div className="filter-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                     {['all', 'revenue', 'geographic', 'impact', 'issues'].map(filter => (
                       <button
@@ -211,33 +187,48 @@ function Dashboard() {
                     ))}
                   </div>
 
-                  {/* Table */}
-                  <div className="table-section">
-                    <InspectionTable hotlist={hotlist} totalCustomers={stats?.customers?.total_customers} />
-                  </div>
+                  {/* Show full dashboard only if filter = "all" */}
+                  {activeFilter === 'all' && (
+                    <>
+                      <MetricsCards stats={stats} />
 
-                  {/* Filter results */}
-                  {renderCharts()}
+                      {/* Row 1 */}
+                      <div className="dashboard-row">
+                        <div className="chart-card chart-2-3">
+                          <RevenueChart stats={stats} />
+                        </div>
+                        <div className="chart-card chart-1-3">
+                          <TheftCategoryChart stats={stats} />
+                        </div>
+                      </div>
+
+                      {/* Row 2 */}
+                      <div className="dashboard-row">
+                        <div className="chart-card chart-1-2">
+                          <GeographicDistribution />
+                        </div>
+                        <div className="chart-card chart-1-2">
+                          <ImpactMetrics />
+                        </div>
+                      </div>
+
+                      {/* Table */}
+                      <div className="table-section">
+                        <InspectionTable hotlist={hotlist} totalCustomers={stats?.customers?.total_customers} />
+                      </div>
+                    </>
+                  )}
+
+                  {/* If filter ≠ all, show single filtered view */}
+                  {activeFilter !== 'all' && renderFilteredView()}
                 </div>
               )}
 
-              {activeView === 'map' && (
-                <div className="map-view">
-                  <NTLMap hotlist={hotlist} />
-                </div>
-              )}
-
-              {activeView === 'fieldops' && (
-                <FieldOpsView hotlist={hotlist} stats={stats} />
-              )}
-
-              {activeView === 'engineering' && (
-                <EngineeringView hotlist={hotlist} stats={stats} />
-              )}
-
-              {activeView === 'customers' && (
-                <CustomerServiceView hotlist={hotlist} stats={stats} />
-              )}
+              {/* Other views */}
+              {activeView === 'map' && <div className="map-view"><NTLMap hotlist={hotlist} /></div>}
+              {activeView === 'fieldops' && <FieldOpsView hotlist={hotlist} stats={stats} />}
+              {activeView === 'engineering' && <EngineeringView hotlist={hotlist} stats={stats} />}
+              {activeView === 'customers' && <CustomerServiceView hotlist={hotlist} stats={stats} />}
             </>
           )}
         </div>

@@ -93,7 +93,8 @@ function GeographicDistribution() {
     <div className="geographic-distribution">
       <div className="geo-header">
         <h3 className="geo-title">Geographic Distribution</h3>
-        <p className="geo-subtitle">NTL Cases by Region (Metro Manila)</p>
+        <p className="geo-subtitle">Detected NTL Cases by Region (Metro Manila)</p>
+        <p className="geo-context">Estimated loss calculated from 72,123 flagged customers (₱15 avg/case)</p>
       </div>
 
       <div className="geo-summary">
@@ -103,7 +104,7 @@ function GeographicDistribution() {
         </div>
         <div className="geo-stat">
           <span className="geo-stat-value">₱{(totalLoss / 1_000_000).toFixed(1)}M</span>
-          <span className="geo-stat-label">Est. Monthly Loss</span>
+          <span className="geo-stat-label">NTL Loss (Flagged Cases)</span>
         </div>
         <div className="geo-stat">
           <span className="geo-stat-value">{regions.length}</span>

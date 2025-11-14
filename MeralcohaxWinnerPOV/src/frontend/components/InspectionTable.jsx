@@ -12,17 +12,19 @@ function InspectionTable({ hotlist, totalCustomers }) {
   const getRecommendedAction = (item) => {
     const riskLevel = item.risk_level?.toLowerCase();
     const confidence = item.prediction_confidence * 100;
-    const features = item.top_contributing_features || [];
+    const hasMeterTamper = item.has_meter_tamper;
+    const hasBillingAnomaly = item.has_billing_anomaly;
+    const hasConsumptionAnomaly = item.has_consumption_anomaly;
     
     if (riskLevel === 'critical' && confidence >= 90) {
-      if (features.includes('meter_tamper')) {
+      if (hasMeterTamper) {
         return 'Immediate field inspection with legal team';
       }
       return 'Urgent site visit with security personnel';
     } else if (riskLevel === 'critical') {
       return 'Priority inspection within 24 hours';
     } else if (riskLevel === 'high') {
-      if (features.includes('consumption_anomaly')) {
+      if (hasConsumptionAnomaly) {
         return 'Schedule meter reading audit';
       }
       return 'Field inspection within 3 days';
@@ -30,6 +32,21 @@ function InspectionTable({ hotlist, totalCustomers }) {
       return 'Remote monitoring and follow-up call';
     }
     return 'Standard inspection queue';
+  };
+
+  // Convert boolean flags to readable indicators
+  const getTopIndicators = (item) => {
+    const indicators = [];
+    if (item.has_meter_tamper) {
+      indicators.push('meter_tamper');
+    }
+    if (item.has_billing_anomaly) {
+      indicators.push('billing_anomaly');
+    }
+    if (item.has_consumption_anomaly) {
+      indicators.push('consumption_anomaly');
+    }
+    return indicators;
   };
 
   const handleSort = (key) => {
@@ -167,11 +184,14 @@ function InspectionTable({ hotlist, totalCustomers }) {
                   </td>
                   <td className="loss-cell">{formatCurrency(item.estimated_monthly_loss)}</td>
                   <td className="indicators-cell">
-                    {(item.top_contributing_features || []).slice(0, 2).map((feature, idx) => (
+                    {getTopIndicators(item).slice(0, 2).map((indicator, idx) => (
                       <span key={idx} className="indicator-tag">
-                        {feature.replace(/_/g, ' ')}
+                        {indicator.replace(/_/g, ' ')}
                       </span>
                     ))}
+                    {getTopIndicators(item).length === 0 && (
+                      <span className="indicator-tag low-risk">normal usage</span>
+                    )}
                   </td>
                   <td className="actions-cell">
                     <span className="recommended-action">
@@ -225,10 +245,15 @@ function InspectionTable({ hotlist, totalCustomers }) {
 InspectionTable.propTypes = {
   hotlist: PropTypes.arrayOf(PropTypes.shape({
     customer_id: PropTypes.string.isRequired,
-    location: PropTypes.string.isRequired,
+    location: PropTypes.string,
+    address: PropTypes.string,
     prediction_confidence: PropTypes.number.isRequired,
     estimated_monthly_loss: PropTypes.number.isRequired,
-    top_contributing_features: PropTypes.arrayOf(PropTypes.string).isRequired,
+    has_meter_tamper: PropTypes.oneOfType([PropTypes.number, PropTypes.bool]),
+    has_billing_anomaly: PropTypes.oneOfType([PropTypes.number, PropTypes.bool]),
+    has_consumption_anomaly: PropTypes.oneOfType([PropTypes.number, PropTypes.bool]),
+    avg_monthly_kwh: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    risk_level: PropTypes.string,
   })).isRequired,
   totalCustomers: PropTypes.number,
 };

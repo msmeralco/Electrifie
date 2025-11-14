@@ -23,12 +23,12 @@ function MetricsCards({ stats }) {
 
   const metrics = [
     {
-      title: 'Total System Loss',
+      title: 'System Loss Percentage',
       value: formatPercentage(stats.feeders.avg_system_loss),
       subtitle: 'Regulatory Cap: 6.25%',
       change: '+0.24%',
       trend: 'down',
-      icon: '⚡',
+      icon: '',
       color: '#fb7018',
       status: 'warning'
     },
@@ -38,17 +38,17 @@ function MetricsCards({ stats }) {
       subtitle: `${formatNumber(stats.customers.critical_count + stats.customers.high_count)} high priority`,
       change: '+3.2%',
       trend: 'up',
-      icon: '🚩',
+      icon: '',
       color: '#ef4444',
       status: 'critical'
     },
     {
-      title: 'Estimated Monthly Loss',
+      title: 'Revenue Loss (Total)',
       value: formatCurrency(stats.feeders.total_revenue_loss),
-      subtitle: 'From detected NTL',
+      subtitle: 'All feeders + network losses',
       change: '+8.2%',
       trend: 'up',
-      icon: '💰',
+      icon: '',
       color: '#f59e0b',
       status: 'info'
     },
@@ -58,7 +58,7 @@ function MetricsCards({ stats }) {
       subtitle: 'Ensemble model precision',
       change: '+2.1%',
       trend: 'up',
-      icon: '🎯',
+      icon: '',
       color: '#10b981',
       status: 'success'
     },
@@ -68,7 +68,7 @@ function MetricsCards({ stats }) {
       subtitle: 'Monitored accounts',
       change: '+1.2%',
       trend: 'up',
-      icon: '👥',
+      icon: '',
       color: '#3b82f6',
       status: 'info'
     },
@@ -78,7 +78,7 @@ function MetricsCards({ stats }) {
       subtitle: 'Smart meters deployed',
       change: '+15.3%',
       trend: 'up',
-      icon: '📡',
+      icon: '',
       color: '#8b5cf6',
       status: 'success'
     },
@@ -90,9 +90,28 @@ function MetricsCards({ stats }) {
         <div key={index} className="metric-card">
           <div className="metric-header">
             <span className="metric-title">{metric.title}</span>
-            <span className="metric-icon" style={{ color: metric.color }}>
-              {metric.icon}
-            </span>
+            <div className="metric-header-right">
+              <span className="metric-icon" style={{ color: metric.color }}>
+                {metric.icon}
+              </span>
+              {metric.title === 'Revenue Loss (Total)' && (
+                <div className="metric-tooltip-container">
+                  <span className="metric-info">ℹ</span>
+                  <div className="metric-tooltip">
+                    <div className="tooltip-content">
+                      <strong>Revenue Loss Breakdown:</strong>
+                      <ul>
+                        <li>Technical losses (line losses, transformer losses)</li>
+                        <li>Commercial losses (billing errors, meter inaccuracy)</li>
+                        <li>Non-technical losses (theft, tampering)</li>
+                      </ul>
+                      <p><strong>Source:</strong> All 35 feeders revenue_loss_php database</p>
+                      <p><strong>vs Geographic View:</strong> Shows only flagged NTL cases (₱1.1M)</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="metric-value">{metric.value}</div>
